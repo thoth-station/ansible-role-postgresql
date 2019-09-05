@@ -12,7 +12,7 @@
         apiVersion: v1
         metadata:
           name: thoth-postgresql
-          namespace: "{{ project_name }}"
+          namespace: "{{ namespace }}"
           labels:
             app: thoth
             component: postgresql
@@ -27,7 +27,7 @@
         apiVersion: v1
         metadata:
           name: thoth-postgresql
-          namespace: "{{ project_name }}"
+          namespace: "{{ namespace }}"
           labels:
             app: thoth
             component: postgresql
@@ -44,7 +44,7 @@
       -p POSTGRESQL_PASSWORD="{{ postgresql_password }}" \
       -p POSTGRESQL_DATABASE="{{ postgresql_database }}" \
       -p VOLUME_CAPACITY="{{ postgresql_volume_capacity }}" \
-      -p POSTGRESQL_VERSION="{{ postgresql_version }}" | oc apply -f - --namespace "{{ project_name }}"
+      -p POSTGRESQL_VERSION="{{ postgresql_version }}" | oc apply -f - --namespace "{{ namespace }}"
 
   - name: "create route for Pgweb"
     k8s:
@@ -74,7 +74,7 @@
             app: thoth
             component: pgweb
           name: pgweb
-          namespace: "{{ project_name }}"
+          namespace: "{{ namespace }}"
         spec:
           ports:
           - port: 80
@@ -95,7 +95,7 @@
             app: thoth
             component: pgweb
           name: pgweb
-          namespace: "{{ project_name }}"
+          namespace: "{{ namespace }}"
         spec:
           replicas: 1
           selector:
@@ -172,7 +172,7 @@
         kind: ImageStream
         metadata:
           name: pgweb
-          namespace: "{{ project_name }}"
+          namespace: "{{ namespace }}"
           labels:
             app: thoth-postgres
             component: pgweb
