@@ -12,6 +12,7 @@
         apiVersion: v1
         metadata:
           name: thoth-postgresql
+          namespace: "{{ project_name }}"
           labels:
             app: thoth
             component: postgresql
@@ -26,6 +27,7 @@
         apiVersion: v1
         metadata:
           name: thoth-postgresql
+          namespace: "{{ project_name }}"
           labels:
             app: thoth
             component: postgresql
@@ -72,6 +74,7 @@
             app: thoth
             component: pgweb
           name: pgweb
+          namespace: "{{ project_name }}"
         spec:
           ports:
           - port: 80
@@ -92,6 +95,7 @@
             app: thoth
             component: pgweb
           name: pgweb
+          namespace: "{{ project_name }}"
         spec:
           replicas: 1
           selector:
@@ -168,6 +172,7 @@
         kind: ImageStream
         metadata:
           name: pgweb
+          namespace: "{{ project_name }}"
           labels:
             app: thoth-postgres
             component: pgweb
