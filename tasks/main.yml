@@ -54,6 +54,7 @@
         apiVersion: v1
         metadata:
           name: pgweb
+          namespace: "{{ namespace }}"
           labels:
             app: thoth
             component: pgweb
