@@ -1,0 +1,23 @@
+galaxy_info:
+  role_name: "postgresql"
+  author: "Fridolin Pokorny"
+  description: "This role will deploy PostgreSQL and related components used by Thoth into OpenShift."
+  company: "Red Hat Inc., the Office of the CTO"
+
+  license: GPLv3
+
+  min_ansible_version: 2.7
+
+  platforms:
+    - name: "Fedora"
+      versions:
+        - 28
+
+  galaxy_tags:
+    - "thoth"
+    - "aistacks"
+    - "development"
+    - "metrics"
+    - "postgresql"
+
+dependencies: []

@@ -1,0 +1,182 @@
+---
+  - name: "generate password if not set explictly"
+    set_fact:
+      postgresql_password: "{{ lookup('password', '/dev/null') }}"
+    when: postgresql_password is not defined
+
+  - name: "create secret for PostgreSQL"
+    k8s:
+      state: present
+      definition:
+        kind: Secret
+        apiVersion: v1
+        metadata:
+          name: thoth-postgresql
+          labels:
+            app: thoth
+            component: postgresql
+        stringData:
+          postgresql-password: "{{ postgresql_password }}"
+
+  - name: "create configmap for PostgreSQL"
+    k8s:
+      state: present
+      definition:
+        kind: ConfigMap
+        apiVersion: v1
+        metadata:
+          name: thoth-postgresql
+          labels:
+            app: thoth
+            component: postgresql
+        stringData:
+          postgresql-user: "{{ postgresql_user }}"
+          postgresql-database: "{{ postgresql_database }}"
+
+  - name: "provision PostgreSQL from OpenShift's service catalog"
+    shell: oc process openshift//postgresql-persistent \
+      -p MEMORY_LIMIT="{{ postgresql_memory_limit}}" \
+      -p NAMESPACE=openshift \
+      -p DATABASE_SERVICE_NAME="{{ postgresql_database_service_name }}" \
+      -p POSTGRESQL_USER="{{ postgresql_user }}" \
+      -p POSTGRESQL_PASSWORD="{{ postgresql_password }}" \
+      -p POSTGRESQL_DATABASE="{{ postgresql_database }}" \
+      -p VOLUME_CAPACITY="{{ postgresql_volume_capacity }}" \
+      -p POSTGRESQL_VERSION="{{ postgresql_version }}" | oc apply -f - --namespace "{{ project_name }}"
+
+  - name: "create route for Pgweb"
+    k8s:
+      state: present
+      definition:
+        kind: Route
+        apiVersion: v1
+        metadata:
+          name: pgweb
+          labels:
+            app: thoth
+            component: pgweb
+          spec:
+            to:
+              kind: Service
+              name: pgweb
+
+  - name: "create Pgweb service"
+    k8s:
+      state: present
+      definition:
+        kind: Service
+        apiVersion: v1
+        metadata:
+          labels:
+            service: pgweb
+            app: thoth
+            component: pgweb
+          name: pgweb
+        spec:
+          ports:
+          - port: 80
+            protocol: TCP
+            targetPort: 8081
+          selector:
+            service: pgweb
+
+  - name: "create deployment config for Pgweb"
+    k8s:
+      state: present
+      definition:
+        apiVersion: v1
+        kind: DeploymentConfig
+        metadata:
+          labels:
+            service: pgweb
+            app: thoth
+            component: pgweb
+          name: pgweb
+        spec:
+          replicas: 1
+          selector:
+            service: pgweb
+          template:
+            metadata:
+              labels:
+                service: pgweb
+            spec:
+              containers:
+              - env:
+                - name: DB_HOST
+                  value: postgresql
+                - name: DB_PORT
+                  value: "5432"
+                - name: DB_DATABASE
+                  valueFrom:
+                    configMapKeyRef:
+                      name: thoth-postgresql
+                      key: postgresql-database
+                - name: DB_USER
+                  valueFrom:
+                    configMapKeyRef:
+                      name: thoth-postgresql
+                      key: postgresql-user
+                - name: DB_PASSWORD
+                  secretKeyRef:
+                    name: thoth-postgresql
+                    key: postgresql-password
+                name: pgweb
+                ports:
+                  - containerPort: 8081
+                    protocol: TCP
+                resources:
+                  requests:
+                    memory: "256Mi"
+                    cpu: "1"
+                  limits:
+                    memory: "512Mi"
+                    cpu: "1"
+                readinessProbe:
+                  httpGet:
+                    path: '/'
+                    port: 8081
+                    scheme: HTTP
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                  timeoutSeconds: 10
+                livenessProbe:
+                  httpGet:
+                    path: '/'
+                    port: 8081
+                    scheme: HTTP
+                  initialDelaySeconds: 10
+                  periodSeconds: 60
+                  timeoutSeconds: 10
+          test: false
+          triggers:
+          - type: ConfigChange
+          - type: ImageChange
+            imageChangeParams:
+              automatic: true
+              containerNames:
+                - pgweb
+              from:
+                kind: ImageStreamTag
+                name: 'pgweb:latest'
+
+  - name: "create deployment config for Pgweb"
+    k8s:
+      state: present
+      definition:
+        apiVersion: image.openshift.io/v1
+        kind: ImageStream
+        metadata:
+          name: pgweb
+          labels:
+            app: thoth-postgres
+            component: pgweb
+        spec:
+          lookupPolicy:
+            local: false
+          tags:
+          - annotations: null
+            from:
+              kind: DockerImage
+              name: sosedoff/pgweb:0.11.3
+            name: latest
