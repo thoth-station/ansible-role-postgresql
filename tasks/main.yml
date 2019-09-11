@@ -4,37 +4,6 @@
       postgresql_password: "{{ lookup('password', '/dev/null') }}"
     when: postgresql_password is not defined
 
-  - name: "create secret for PostgreSQL"
-    k8s:
-      state: present
-      definition:
-        kind: Secret
-        apiVersion: v1
-        metadata:
-          name: thoth-postgresql
-          namespace: "{{ namespace }}"
-          labels:
-            app: thoth
-            component: postgresql
-        stringData:
-          postgresql-password: "{{ postgresql_password }}"
-
-  - name: "create configmap for PostgreSQL"
-    k8s:
-      state: present
-      definition:
-        kind: ConfigMap
-        apiVersion: v1
-        metadata:
-          name: thoth-postgresql
-          namespace: "{{ namespace }}"
-          labels:
-            app: thoth
-            component: postgresql
-        stringData:
-          postgresql-user: "{{ postgresql_user }}"
-          postgresql-database: "{{ postgresql_database }}"
-
   - name: "provision PostgreSQL from OpenShift's service catalog"
     shell: oc process openshift//postgresql-persistent \
       -p MEMORY_LIMIT="{{ postgresql_memory_limit}}" \
@@ -114,18 +83,18 @@
                   value: "5432"
                 - name: DB_DATABASE
                   valueFrom:
-                    configMapKeyRef:
-                      name: thoth-postgresql
-                      key: postgresql-database
+                    secretKeyRef:
+                      name: postgresql
+                      key: database-name
                 - name: DB_USER
                   valueFrom:
-                    configMapKeyRef:
-                      name: thoth-postgresql
-                      key: postgresql-user
+                    secretKeyRef:
+                      name: postgresql
+                      key: database-user
                 - name: DB_PASSWORD
                   secretKeyRef:
-                    name: thoth-postgresql
-                    key: postgresql-password
+                    name: postgresql
+                    key: database-password
                 name: pgweb
                 ports:
                   - containerPort: 8081
