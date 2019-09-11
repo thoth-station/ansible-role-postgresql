@@ -1,7 +1,7 @@
 ---
   - name: "generate password if not set explictly"
     set_fact:
-      postgresql_password: "{{ lookup('password', '/dev/null') }}"
+      postgresql_password: "{{ lookup('password', '/dev/null length=24 chars=ascii_letters,digits') }}"
     when: postgresql_password is not defined
 
   - name: "create secret for PostgreSQL"
