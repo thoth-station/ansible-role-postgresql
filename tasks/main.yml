@@ -27,10 +27,10 @@
           labels:
             app: thoth
             component: pgweb
-          spec:
-            to:
-              kind: Service
-              name: pgweb
+        spec:
+          to:
+            kind: Service
+            name: pgweb
 
   - name: "create Pgweb service"
     k8s:
