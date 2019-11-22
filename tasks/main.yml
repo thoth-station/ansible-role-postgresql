@@ -25,7 +25,7 @@
           name: pgweb
           namespace: "{{ namespace }}"
           labels:
-            app: thoth
+            app: thoth-postgres
             component: pgweb
         spec:
           to:
@@ -41,7 +41,7 @@
         metadata:
           labels:
             service: pgweb
-            app: thoth
+            app: thoth-postgres
             component: pgweb
           name: pgweb
           namespace: "{{ namespace }}"
@@ -62,7 +62,7 @@
         metadata:
           labels:
             service: pgweb
-            app: thoth
+            app: thoth-postgres
             component: pgweb
           name: pgweb
           namespace: "{{ namespace }}"
@@ -134,7 +134,7 @@
                 kind: ImageStreamTag
                 name: 'pgweb:latest'
 
-  - name: "create deployment config for Pgweb"
+  - name: "create image stream for Pgweb"
     k8s:
       state: present
       definition:
@@ -154,6 +154,130 @@
             from:
               kind: DockerImage
               name: sosedoff/pgweb:0.11.3
+            name: latest
+
+  - name: "create pgbouncer deployment"
+    k8s:
+      state: present
+      definition:
+        apiVersion: v1
+        kind: DeploymentConfig
+        metadata:
+          labels:
+            service: pgbouncer
+            app: thoth-postgres
+            component: pgbouncer
+          name: pgbouncer
+          namespace: "{{ namespace }}"
+        spec:
+          replicas: 1
+          selector:
+            service: pgbouncer
+          template:
+            metadata:
+              labels:
+                service: pgbouncer
+            spec:
+              containers:
+              - env:
+                - name: POSTGRESQL_USER
+                  valueFrom:
+                    secretKeyRef:
+                      key: database-user
+                      name: postgresql
+                - name: POSTGRESQL_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: database-password
+                      name: postgresql
+                - name: POSTGRESQL_DATABASE
+                  valueFrom:
+                    secretKeyRef:
+                      key: database-name
+                      name: postgresql
+                - name: POSTGRES_SERVICE_HOST
+                  value: postgresql
+                name: pgbouncer
+                image: pgbouncer
+                livenessProbe:
+                  failureThreshold: 3
+                  initialDelaySeconds: 10
+                  periodSeconds: 60
+                  successThreshold: 1
+                  tcpSocket:
+                    port: 5432
+                  timeoutSeconds: 10
+                ports:
+                - containerPort: 5432
+                  protocol: TCP
+                readinessProbe:
+                  failureThreshold: 3
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  successThreshold: 1
+                  tcpSocket:
+                    port: 5432
+                  timeoutSeconds: 10
+                resources:
+                  limits:
+                    cpu: 2
+                    memory: 512Mi
+                  requests:
+                    cpu: 2
+                    memory: 512Mi
+          test: false
+          triggers:
+          - type: ConfigChange
+          - type: ImageChange
+            imageChangeParams:
+              automatic: true
+              containerNames:
+                - pgbouncer
+              from:
+                kind: ImageStreamTag
+                name: 'pgbouncer:latest'
+
+  - name: "create pgbouncer service"
+    k8s:
+      state: present
+      definition:
+        kind: Service
+        apiVersion: v1
+        metadata:
+          labels:
+            service: pgbouncer
+            app: thoth-postgres
+            component: pgbouncer
+          name: pgbouncer
+          namespace: "{{ namespace }}"
+        spec:
+          ports:
+          - port: 5432
+            protocol: TCP
+            targetPort: 5432
+          selector:
+            service: pgbouncer
+
+  - name: "create image stream for pgbouncer"
+    k8s:
+      state: present
+      definition:
+        apiVersion: image.openshift.io/v1
+        kind: ImageStream
+        metadata:
+          name: pgbouncer
+          namespace: "{{ namespace }}"
+          labels:
+            app: thoth-postgres
+            component: pgbouncer
+        spec:
+          lookupPolicy:
+            local: false
+          tags:
+          - annotations: null
+            from:
+              kind: DockerImage
+              name: quay.io/openshiftio/bayesian-coreapi-pgbouncer:latest
             name: latest
 
   - name: "show PostgreSQL password"
