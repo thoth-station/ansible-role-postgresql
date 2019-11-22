@@ -4,16 +4,21 @@
       postgresql_password: "{{ lookup('password', '/dev/null length=24 chars=ascii_letters,digits') }}"
     when: postgresql_password is not defined
 
-  - name: "provision PostgreSQL from OpenShift's service catalog"
-    shell: oc process openshift//postgresql-persistent \
-      -p MEMORY_LIMIT="{{ postgresql_memory_limit}}" \
-      -p NAMESPACE=openshift \
-      -p DATABASE_SERVICE_NAME="{{ postgresql_database_service_name }}" \
-      -p POSTGRESQL_USER="{{ postgresql_user }}" \
-      -p POSTGRESQL_PASSWORD="{{ postgresql_password }}" \
-      -p POSTGRESQL_DATABASE="{{ postgresql_database }}" \
-      -p VOLUME_CAPACITY="{{ postgresql_volume_capacity }}" \
-      -p POSTGRESQL_VERSION="{{ postgresql_version }}" | oc apply -f - --namespace "{{ namespace }}"
+  - name: "provision PostgreSQL"
+    include_tasks: postgresql.yml
+    vars:
+      STORAGE_CLASS_NAME: "{{ storage_class_name }}"
+      CEPH_PV_SECRET: "{{ ceph_pv_secret }}"
+      CEPH_PV_SECRET_NAME: "{{ ceph_pv_secret_name }}"
+      MEMORY_LIMIT: "{{ postgresql_memory_limit}}"
+      NAMESPACE: "{{ namespace }}"
+      POSTGRESQL_BASE_IMAGE_NAMESPACE: openshift
+      DATABASE_SERVICE_NAME: "{{ postgresql_database_service_name }}"
+      POSTGRESQL_USER: "{{ postgresql_user }}"
+      POSTGRESQL_PASSWORD: "{{ postgresql_password }}"
+      POSTGRESQL_DATABASE: "{{ postgresql_database }}"
+      VOLUME_CAPACITY: "{{ postgresql_volume_capacity }}"
+      POSTGRESQL_VERSION: "{{ postgresql_version }}"
 
   - name: "create route for Pgweb"
     k8s:
@@ -158,4 +163,3 @@
 
   - name: "show PostgreSQL password"
     debug: "msg=PostgreSQL password: '{{ postgresql_password }}'"
-

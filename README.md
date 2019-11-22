@@ -36,7 +36,9 @@ The playbook accepts the following variables:
 * `postgresql_database` - name of the PostgreSQL database (defaults to `postgres`)
 * `postgresql_volume_capacity` - the default volume capacity used to persist data (defaults to `1Gi`)
 * `postgresql_version` - version of PostgreSQL which should be used (defaults to `9.6`) - this version *has to* be available in OpenShift's service catalogue
-
+* `storage_class_name` - the persistent volume to be claimed for postgresql
+* `ceph_pv_secret_name` - ceph based persistent volume's required secret name
+* `ceph_pv_secret` - ceph based persistent volume secret (value is present in thoth gopass)
 
 License
 -------
