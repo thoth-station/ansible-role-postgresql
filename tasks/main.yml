@@ -20,7 +20,7 @@
       state: present
       definition:
         kind: Route
-        apiVersion: v1
+        apiVersion: route.openshift.io/v1
         metadata:
           name: pgweb
           namespace: "{{ namespace }}"
@@ -57,7 +57,7 @@
     k8s:
       state: present
       definition:
-        apiVersion: v1
+        apiVersion: apps.openshift.io/v1
         kind: DeploymentConfig
         metadata:
           labels:
@@ -160,7 +160,7 @@
     k8s:
       state: present
       definition:
-        apiVersion: v1
+        apiVersion: apps.openshift.io/v1
         kind: DeploymentConfig
         metadata:
           labels:
