@@ -25,7 +25,7 @@
           name: pgweb
           namespace: "{{ namespace }}"
           labels:
-            app: thoth-postgres
+            app: thoth
             component: pgweb
         spec:
           to:
@@ -41,7 +41,7 @@
         metadata:
           labels:
             service: pgweb
-            app: thoth-postgres
+            app: thoth
             component: pgweb
           name: pgweb
           namespace: "{{ namespace }}"
@@ -62,7 +62,7 @@
         metadata:
           labels:
             service: pgweb
-            app: thoth-postgres
+            app: thoth
             component: pgweb
           name: pgweb
           namespace: "{{ namespace }}"
@@ -144,7 +144,7 @@
           name: pgweb
           namespace: "{{ namespace }}"
           labels:
-            app: thoth-postgres
+            app: thoth
             component: pgweb
         spec:
           lookupPolicy:
@@ -165,7 +165,7 @@
         metadata:
           labels:
             service: pgbouncer
-            app: thoth-postgres
+            app: thoth
             component: pgbouncer
           name: pgbouncer
           namespace: "{{ namespace }}"
@@ -246,7 +246,7 @@
         metadata:
           labels:
             service: pgbouncer
-            app: thoth-postgres
+            app: thoth
             component: pgbouncer
           name: pgbouncer
           namespace: "{{ namespace }}"
@@ -268,7 +268,7 @@
           name: pgbouncer
           namespace: "{{ namespace }}"
           labels:
-            app: thoth-postgres
+            app: thoth
             component: pgbouncer
         spec:
           lookupPolicy:
