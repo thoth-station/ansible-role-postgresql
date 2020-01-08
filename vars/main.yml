@@ -7,4 +7,4 @@ postgresql_user: thoth
 # postgresql_password: thoth
 postgresql_database: postgres
 postgresql_volume_capacity: "1Gi"
-postgresql_version: "9.6"
+postgresql_version: "10"
