@@ -142,7 +142,7 @@
                 timeoutSeconds: 1
               resources:
                 limits:
-                  memory: "${MEMORY_LIMIT}"
+                  memory: "{{ MEMORY_LIMIT }}"
               securityContext:
                 capabilities: {}
                 privileged: false
