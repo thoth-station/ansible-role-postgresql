@@ -48,7 +48,24 @@
       status:
         loadBalancer: {}
 
-- name: "create presistant volume claim for postgresql"
+- name: "create presistant volume claim for postgresql with default storage class"
+  k8s:
+    state: present
+    definition:
+      kind: PersistentVolumeClaim
+      apiVersion: v1
+      metadata:
+        name: "{{ DATABASE_SERVICE_NAME }}"
+        namespace: "{{ NAMESPACE }}"
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: "{{ VOLUME_CAPACITY }}"
+  when: storage_class_name is not defined
+
+- name: "create presistant volume claim for postgresql with custom storage class"
   k8s:
     state: present
     definition:
@@ -64,6 +81,7 @@
           requests:
             storage: "{{ VOLUME_CAPACITY }}"
         storageClassName: "{{ STORAGE_CLASS_NAME }}"
+  when: storage_class_name is defined
 
 - name: "create secret for ceph based persistent volume"
   k8s:
@@ -77,6 +95,7 @@
         namespace: "{{ NAMESPACE }}"
       data:
         key: "{{ CEPH_PV_SECRET }}"
+  when: storage_class_name is defined
 
 - name: "create deployment for postgresql"
   k8s:
@@ -163,7 +182,7 @@
             - postgresql
             from:
               kind: ImageStreamTag
-              name: postgresql:"{{ POSTGRESQL_VERSION }}"
+              name: "postgresql:{{ POSTGRESQL_VERSION }}"
               namespace: "{{ POSTGRESQL_BASE_IMAGE_NAMESPACE }}"
             lastTriggeredImage: ''
           type: ImageChange
