@@ -63,7 +63,7 @@
         resources:
           requests:
             storage: "{{ VOLUME_CAPACITY }}"
-  when: storage_class_name is not defined
+  when: storage_class_name == "default"
 
 - name: "create presistant volume claim for postgresql with custom storage class"
   k8s:
@@ -81,7 +81,7 @@
           requests:
             storage: "{{ VOLUME_CAPACITY }}"
         storageClassName: "{{ STORAGE_CLASS_NAME }}"
-  when: storage_class_name is defined
+  when: storage_class_name != "default"
 
 - name: "create secret for ceph based persistent volume"
   k8s:
@@ -95,7 +95,7 @@
         namespace: "{{ NAMESPACE }}"
       data:
         key: "{{ CEPH_PV_SECRET }}"
-  when: storage_class_name is defined
+  when: ceph_pv_secret_name is defined and ceph_pv_secret is defined
 
 - name: "create deployment for postgresql"
   k8s:
