@@ -8,3 +8,4 @@ postgresql_user: thoth
 postgresql_database: postgres
 postgresql_volume_capacity: "1Gi"
 postgresql_version: "10"
+storage_class_name: default
